@@ -49,15 +49,18 @@ export default function Home() {
 
   const MAZE_COLS = 12;
   const MAZE_ROWS = 10;
-  const [cellSize, setCellSize] = useState(
-    Math.min(55, typeof window !== "undefined" ? window.innerWidth * 0.08 : 55)
-  );
+  const [cellSize, setCellSize] = useState(55);
 
   useEffect(() => {
     const handleResize = () => {
-      setCellSize(Math.min(55, window.innerWidth * 0.08));
+      // Calculate available width (90vw - padding - borders)
+      const vw = window.innerWidth * 0.9; // 90vw from CSS
+      const containerWidth = Math.min(660, vw) - 20; // subtract padding (10px * 2)
+      const maxCellSize = Math.floor(containerWidth / MAZE_COLS);
+      setCellSize(Math.min(55, maxCellSize));
     };
 
+    handleResize(); // Call immediately on mount
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -413,6 +416,8 @@ export default function Home() {
           style={{
             gridTemplateColumns: `repeat(${MAZE_COLS}, ${cellSize}px)`,
             gridTemplateRows: `repeat(${MAZE_ROWS}, ${cellSize}px)`,
+            width: "fit-content",
+            margin: "0 auto",
           }}
         >
           {mazeData.map((row, r) =>
