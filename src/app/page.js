@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { createMazePrompt } from "../utils/prompt";
 import styles from "./page.module.css";
 
@@ -49,7 +49,79 @@ export default function Home() {
 
   const MAZE_COLS = 12;
   const MAZE_ROWS = 10;
-  const CELL_SIZE = 55;
+  const [cellSize, setCellSize] = useState(
+    Math.min(55, typeof window !== "undefined" ? window.innerWidth * 0.08 : 55)
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setCellSize(Math.min(55, window.innerWidth * 0.08));
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Handle touch events for mobile
+  const touchStartPosition = useRef({ x: 0, y: 0 });
+
+  const handleTouchStart = useCallback((e) => {
+    touchStartPosition.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+    };
+  }, []);
+
+  const handleTouchEnd = useCallback(
+    (e) => {
+      if (gameWon) return;
+
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+
+      const deltaX = touchEndX - touchStartPosition.current.x;
+      const deltaY = touchEndY - touchStartPosition.current.y;
+
+      // Minimum swipe distance
+      const minSwipeDistance = 30;
+
+      if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        if (Math.abs(deltaX) > minSwipeDistance) {
+          if (deltaX > 0) {
+            executeMovement({ direction: "right", steps: 1 }, playerPos);
+          } else {
+            executeMovement({ direction: "left", steps: 1 }, playerPos);
+          }
+        }
+      } else {
+        if (Math.abs(deltaY) > minSwipeDistance) {
+          if (deltaY > 0) {
+            executeMovement({ direction: "down", steps: 1 }, playerPos);
+          } else {
+            executeMovement({ direction: "up", steps: 1 }, playerPos);
+          }
+        }
+      }
+    },
+    [gameWon, playerPos]
+  );
+
+  useEffect(() => {
+    const mazeContainer = document.querySelector(`.${styles.mazeContainer}`);
+    if (mazeContainer) {
+      mazeContainer.addEventListener("touchstart", handleTouchStart, {
+        passive: true,
+      });
+      mazeContainer.addEventListener("touchend", handleTouchEnd, {
+        passive: true,
+      });
+
+      return () => {
+        mazeContainer.removeEventListener("touchstart", handleTouchStart);
+        mazeContainer.removeEventListener("touchend", handleTouchEnd);
+      };
+    }
+  }, [handleTouchStart, handleTouchEnd]);
 
   const mazeData = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -339,8 +411,8 @@ export default function Home() {
         <div
           className={styles.mazeContainer}
           style={{
-            gridTemplateColumns: `repeat(${MAZE_COLS}, ${CELL_SIZE}px)`,
-            gridTemplateRows: `repeat(${MAZE_ROWS}, ${CELL_SIZE}px)`,
+            gridTemplateColumns: `repeat(${MAZE_COLS}, ${cellSize}px)`,
+            gridTemplateRows: `repeat(${MAZE_ROWS}, ${cellSize}px)`,
           }}
         >
           {mazeData.map((row, r) =>
@@ -370,8 +442,8 @@ export default function Home() {
         <div
           className={styles.player}
           style={{
-            top: `${playerPos.row * CELL_SIZE + 27.5}px`,
-            left: `${playerPos.col * CELL_SIZE + 27.5}px`,
+            top: `${playerPos.row * cellSize + cellSize / 2}px`,
+            left: `${playerPos.col * cellSize + cellSize / 2}px`,
           }}
         />
       </div>

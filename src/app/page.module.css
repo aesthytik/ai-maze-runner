@@ -10,6 +10,20 @@
   color: #fff;
 }
 
+.timer {
+  font-size: min(48px, 8vw);
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+  margin-bottom: 20px;
+  font-family: monospace;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 10px 30px;
+  border-radius: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+}
+
 .gameContainer {
   position: relative;
   margin: 20px 0;
@@ -17,8 +31,8 @@
   background-color: rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  width: 660px;
-  height: 550px;
+  width: min(660px, 95vw);
+  height: min(550px, 80vh);
   padding: 0;
   backdrop-filter: blur(8px);
   display: flex;
@@ -33,8 +47,8 @@
 }
 
 .cell {
-  width: 55px;
-  height: 55px;
+  width: min(55px, 8vw);
+  height: min(55px, 8vw);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-sizing: border-box;
   transition: all 0.3s ease;
@@ -93,8 +107,8 @@
 
 .player {
   position: absolute;
-  width: 30px;
-  height: 30px;
+  width: min(30px, 4vw);
+  height: min(30px, 4vw);
   border-radius: 50%;
   background: radial-gradient(
     circle at 30% 30%,
@@ -189,7 +203,7 @@
 }
 
 .chatInterface {
-  width: 660px;
+  width: min(660px, 95vw);
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 10px;
@@ -199,7 +213,7 @@
 }
 
 .chatOutput {
-  height: 150px;
+  height: min(150px, 30vh);
   overflow-y: auto;
   border: 1px solid rgba(255, 255, 255, 0.2);
   margin-bottom: 10px;
@@ -291,4 +305,37 @@
   border-radius: 8px;
   border: 1px solid rgba(239, 68, 68, 0.3);
   backdrop-filter: blur(4px);
+}
+
+@media (max-width: 480px) {
+  .main {
+    padding: 10px;
+  }
+
+  .timer {
+    margin-bottom: 10px;
+    padding: 5px 15px;
+  }
+
+  .message {
+    margin: 3px 0;
+    padding: 4px 6px;
+    font-size: 14px;
+  }
+
+  .chatInputArea input {
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+
+  .chatInputArea button {
+    padding: 6px 15px;
+    font-size: 14px;
+  }
+
+  .feedback {
+    font-size: 14px;
+    padding: 8px;
+    margin: 8px 0;
+  }
 }
