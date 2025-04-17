@@ -54,13 +54,13 @@ export default function Home() {
     return { row: 1, col: 1 };
   }
 
-  function movePlayer(dRow, dCol) {
+  function movePlayer(dRow, dCol, currentPos) {
     if (gameWon) return false;
 
-    const newRow = playerPos.row + dRow;
-    const newCol = playerPos.col + dCol;
+    const newRow = currentPos.row + dRow;
+    const newCol = currentPos.col + dCol;
 
-    console.log("Moving from", playerPos, "to", { row: newRow, col: newCol });
+    console.log("Moving from", currentPos, "to", { row: newRow, col: newCol });
 
     // Boundary check
     if (
@@ -89,79 +89,115 @@ export default function Home() {
       return true;
     }
 
-    return true;
+    return { success: true, newPos: { row: newRow, col: newCol } };
   }
 
-  function executeAction(action) {
-    if (gameWon) return;
-    console.log("Executing action:", action);
+  function executeMovement(movement, startPos) {
+    if (gameWon) return null;
+    console.log("Executing movement:", movement);
 
-    switch (action.action) {
-      case "move": {
-        const { direction, steps } = action;
-        let dRow = 0,
-          dCol = 0;
+    const { direction, steps } = movement;
+    let dRow = 0,
+      dCol = 0;
 
-        if (direction === "up") dRow = -1;
-        else if (direction === "down") dRow = 1;
-        else if (direction === "left") dCol = -1;
-        else if (direction === "right") dCol = 1;
-        else return;
+    if (direction === "up") dRow = -1;
+    else if (direction === "down") dRow = 1;
+    else if (direction === "left") dCol = -1;
+    else if (direction === "right") dCol = 1;
+    else return null;
 
-        const numSteps = Math.max(1, Math.min(5, Number(steps) || 1));
-        console.log(`Moving ${direction} by ${numSteps} steps`);
+    const numSteps = Math.max(1, Math.min(5, Number(steps) || 1));
+    console.log(`Moving ${direction} by ${numSteps} steps`);
 
-        let stepsTaken = 0;
-        let success = false;
+    let stepsTaken = 0;
+    let currentPos = startPos;
+    let result;
 
-        // Try to move all steps at once
-        const totalNewRow = playerPos.row + dRow * numSteps;
-        const totalNewCol = playerPos.col + dCol * numSteps;
+    // Try to move all steps at once
+    const totalNewRow = startPos.row + dRow * numSteps;
+    const totalNewCol = startPos.col + dCol * numSteps;
 
-        // Check if the entire path is clear
-        let pathClear = true;
-        for (let i = 1; i <= numSteps; i++) {
-          const checkRow = playerPos.row + dRow * i;
-          const checkCol = playerPos.col + dCol * i;
+    // Check if the entire path is clear
+    let pathClear = true;
+    for (let i = 1; i <= numSteps; i++) {
+      const checkRow = startPos.row + dRow * i;
+      const checkCol = startPos.col + dCol * i;
 
-          // Check boundaries
-          if (
-            checkRow < 0 ||
-            checkRow >= MAZE_ROWS ||
-            checkCol < 0 ||
-            checkCol >= MAZE_COLS ||
-            mazeData[checkRow][checkCol] === 1
-          ) {
-            pathClear = false;
-            break;
-          }
-        }
-
-        if (pathClear) {
-          // Move the full distance
-          success = movePlayer(dRow * numSteps, dCol * numSteps);
-          if (success) stepsTaken = numSteps;
-        } else {
-          // If path isn't clear, try moving one step at a time
-          for (let i = 0; i < numSteps; i++) {
-            if (gameWon) break;
-            if (movePlayer(dRow, dCol)) {
-              stepsTaken++;
-            } else {
-              break;
-            }
-          }
-        }
-
-        if (stepsTaken > 0) {
-          setFeedback(
-            `Moved ${direction} ${stepsTaken} step${stepsTaken > 1 ? "s" : ""}`
-          );
-        }
+      // Check boundaries
+      if (
+        checkRow < 0 ||
+        checkRow >= MAZE_ROWS ||
+        checkCol < 0 ||
+        checkCol >= MAZE_COLS ||
+        mazeData[checkRow][checkCol] === 1
+      ) {
+        pathClear = false;
         break;
       }
     }
+
+    if (pathClear) {
+      // Move the full distance
+      result = movePlayer(dRow * numSteps, dCol * numSteps, currentPos);
+      if (result.success) {
+        stepsTaken = numSteps;
+        currentPos = result.newPos;
+      }
+    } else {
+      // If path isn't clear, try moving one step at a time
+      for (let i = 0; i < numSteps; i++) {
+        if (gameWon) break;
+        result = movePlayer(dRow, dCol, currentPos);
+        if (result.success) {
+          stepsTaken++;
+          currentPos = result.newPos;
+        } else {
+          break;
+        }
+      }
+    }
+
+    if (stepsTaken > 0) {
+      setFeedback(
+        `Moved ${direction} ${stepsTaken} step${stepsTaken > 1 ? "s" : ""}`
+      );
+    }
+
+    return currentPos;
   }
+
+  async function executeActions(movements) {
+    if (gameWon || !Array.isArray(movements)) return;
+    console.log("Executing movements:", movements);
+
+    let currentPos = playerPos;
+
+    // Execute movements sequentially
+    for (const movement of movements) {
+      if (gameWon) break;
+
+      // Wait a bit for animation and state updates
+      await new Promise((resolve) => {
+        const newPos = executeMovement(movement, currentPos);
+        if (newPos) {
+          currentPos = newPos;
+        }
+        setTimeout(resolve, 1000); // Small delay for visual feedback
+      });
+    }
+  }
+
+  function generateMovementDescription(movements) {
+    if (!Array.isArray(movements) || movements.length === 0) return "";
+
+    return movements
+      .map(
+        (m) => `Moving ${m.direction}${m.steps > 1 ? ` ${m.steps} steps` : ""}`
+      )
+      .join(", then ");
+  }
+
+  // Handler removed as it's no longer needed - using executeActions instead
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
@@ -195,21 +231,26 @@ export default function Home() {
 
       if (data?.content) {
         try {
-          const actionJson = JSON.parse(data.content);
-          console.log("Parsed action:", actionJson);
-          executeAction(actionJson);
-          setInput(""); // Clear input after successful command
+          const movements = JSON.parse(data.content);
+          console.log("Parsed movements:", movements);
 
-          // Add AI's response to chat
-          setMessages((prev) => [
-            ...prev,
-            {
-              role: "assistant",
-              content: `Moving ${actionJson.direction}${
-                actionJson.steps > 1 ? ` ${actionJson.steps} steps` : ""
-              }`,
-            },
-          ]);
+          if (Array.isArray(movements)) {
+            // Execute movements and wait for them to complete
+            await executeActions(movements);
+            setInput(""); // Clear input after successful command
+
+            // Add AI's response to chat
+            const responseContent = generateMovementDescription(movements);
+            if (responseContent) {
+              setMessages((prev) => [
+                ...prev,
+                {
+                  role: "assistant",
+                  content: responseContent,
+                },
+              ]);
+            }
+          }
         } catch (e) {
           console.error("Error parsing action:", e);
           setFeedback("Invalid command response from AI");
