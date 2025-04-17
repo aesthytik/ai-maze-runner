@@ -89,8 +89,8 @@
 
 .player {
   position: absolute;
-  width: 53px;
-  height: 53px;
+  width: 60px;
+  height: 60px;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23FDB813' d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z'/%3E%3Cpath fill='%23FDB813' d='M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm2 9h-4v-2h4v2zm0-3h-4v-2h4v2z'/%3E%3C/svg%3E")
     center/70% no-repeat;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);

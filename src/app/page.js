@@ -302,7 +302,7 @@ export default function Home() {
 
   return (
     <main className={styles.main}>
-      <h1
+      {/* <h1
         style={{
           color: "#fff",
           textShadow: "0 0 10px rgba(255,255,255,0.5)",
@@ -310,7 +310,7 @@ export default function Home() {
         }}
       >
         Mystical Maze Navigator
-      </h1>
+      </h1> */}
 
       <div className={styles.gameContainer}>
         <div
