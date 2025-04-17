@@ -8,6 +8,18 @@ export default function Home() {
   const [gameWon, setGameWon] = useState(false);
   const [playerPos, setPlayerPos] = useState({ row: -1, col: -1 });
   const [showCelebration, setShowCelebration] = useState(false);
+  const [timer, setTimer] = useState(0);
+  const [timerActive, setTimerActive] = useState(false);
+
+  useEffect(() => {
+    let interval;
+    if (timerActive) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [timerActive]);
 
   const createSpaghettiElements = () => {
     const elements = [];
@@ -70,6 +82,7 @@ export default function Home() {
   useEffect(() => {
     const startPos = findStartPosition();
     setPlayerPos(startPos);
+    setTimerActive(true); // Start timer when game begins
   }, []);
 
   function findStartPosition() {
@@ -120,7 +133,13 @@ export default function Home() {
     if (targetCellType === 2) {
       setGameWon(true);
       setShowCelebration(true);
-      setFeedback("Congratulations! You've reached the exit! 🎉 🍝");
+      setTimerActive(false); // Stop timer
+      const minutes = Math.floor(timer / 60);
+      const seconds = timer % 60;
+      const timeText = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+      setFeedback(
+        `Congratulations! You've reached the exit in ${timeText}! 🎉 🍝`
+      );
       setTimeout(() => setShowCelebration(false), 2000);
       return true;
     }
@@ -312,6 +331,10 @@ export default function Home() {
         Mystical Maze Navigator
       </h1> */}
 
+      <div className={styles.timer}>
+        {Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, "0")}
+      </div>
+
       <div className={styles.gameContainer}>
         <div
           className={styles.mazeContainer}
@@ -347,8 +370,8 @@ export default function Home() {
         <div
           className={styles.player}
           style={{
-            top: `${playerPos.row * CELL_SIZE}px`,
-            left: `${playerPos.col * CELL_SIZE}px`,
+            top: `${playerPos.row * CELL_SIZE + 27.5}px`,
+            left: `${playerPos.col * CELL_SIZE + 27.5}px`,
           }}
         />
       </div>
