@@ -7,27 +7,56 @@ import styles from "./page.module.css";
 export default function Home() {
   const [gameWon, setGameWon] = useState(false);
   const [playerPos, setPlayerPos] = useState({ row: -1, col: -1 });
+  const [showCelebration, setShowCelebration] = useState(false);
 
-  const MAZE_COLS = 10;
-  const MAZE_ROWS = 8;
-  const CELL_SIZE = 40;
+  const createSpaghettiElements = () => {
+    const elements = [];
+    for (let i = 0; i < 30; i++) {
+      const tx = Math.random() * 1000 - 500;
+      const ty = Math.random() * 500;
+      const rot = Math.random() * 360;
+      const delay = Math.random() * 0.5;
+
+      elements.push(
+        <div
+          key={i}
+          className={styles.spaghetti}
+          style={{
+            left: "50%",
+            top: "50%",
+            "--tx": `${tx}px`,
+            "--ty": `${ty}px`,
+            "--rot": `${rot}deg`,
+            animationDelay: `${delay}s`,
+          }}
+        />
+      );
+    }
+    return elements;
+  };
+
+  const MAZE_COLS = 12;
+  const MAZE_ROWS = 10;
+  const CELL_SIZE = 55;
 
   const mazeData = [
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 3, 0, 1, 0, 0, 0, 0, 0, 1],
-    [1, 1, 0, 1, 0, 1, 1, 1, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-    [1, 0, 1, 1, 1, 1, 0, 1, 1, 1],
-    [1, 0, 0, 0, 0, 1, 0, 0, 0, 1],
-    [1, 1, 1, 1, 0, 0, 1, 1, 2, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 3, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 4, 0, 1, 0, 1],
+    [1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1],
+    [1, 0, 0, 4, 0, 0, 0, 1, 1, 1, 0, 1],
+    [1, 1, 1, 1, 1, 1, 0, 0, 0, 4, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1],
+    [1, 0, 1, 1, 1, 1, 0, 0, 0, 2, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
   ];
 
   const [messages, setMessages] = useState([
     {
       role: "system",
       content:
-        "Welcome! Guide the player (red square) to the exit (green square) using commands like 'move right' or 'go down 2 steps'.",
+        "Welcome to the Mystical Maze! 🌟 Navigate through the mysterious labyrinth to find the glowing portal, but beware of the dangerous traps (⚠️)! Use commands like 'move right' or 'go down 2 steps' to navigate.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -80,12 +109,19 @@ export default function Home() {
       return false;
     }
 
+    if (targetCellType === 4) {
+      setFeedback("Oh no! You hit a trap! Try a different path! ☠️");
+      return false;
+    }
+
     setPlayerPos({ row: newRow, col: newCol });
 
     // Win check
     if (targetCellType === 2) {
       setGameWon(true);
-      setFeedback("Congratulations! You've reached the exit! 🎉");
+      setShowCelebration(true);
+      setFeedback("Congratulations! You've reached the exit! 🎉 🍝");
+      setTimeout(() => setShowCelebration(false), 2000);
       return true;
     }
 
@@ -266,7 +302,15 @@ export default function Home() {
 
   return (
     <main className={styles.main}>
-      <h1>AI Maze Navigator</h1>
+      <h1
+        style={{
+          color: "#fff",
+          textShadow: "0 0 10px rgba(255,255,255,0.5)",
+          marginBottom: "20px",
+        }}
+      >
+        Mystical Maze Navigator
+      </h1>
 
       <div className={styles.gameContainer}>
         <div
@@ -277,20 +321,27 @@ export default function Home() {
           }}
         >
           {mazeData.map((row, r) =>
-            row.map((cellType, c) => (
-              <div
-                key={`${r}-${c}`}
-                className={`${styles.cell} ${
-                  cellType === 1
-                    ? styles.wall
-                    : cellType === 2
-                    ? styles.exit
-                    : styles.path
-                }`}
-                data-row={r}
-                data-col={c}
-              />
-            ))
+            row.map((cellType, c) => {
+              const isPath = cellType === 0;
+              const pathClass = isPath
+                ? `${styles.path} ${
+                    (r + c) % 2 === 0 ? styles.pathLight : styles.pathDark
+                  }`
+                : cellType === 1
+                ? styles.wall
+                : styles.exit;
+
+              return (
+                <div
+                  key={`${r}-${c}`}
+                  className={`${styles.cell} ${
+                    cellType === 4 ? styles.danger : pathClass
+                  }`}
+                  data-row={r}
+                  data-col={c}
+                />
+              );
+            })
           )}
         </div>
         <div
@@ -328,6 +379,9 @@ export default function Home() {
         {isLoading && <p className={styles.loadingIndicator}>Thinking...</p>}
         {feedback && <p className={styles.feedback}>{feedback}</p>}
       </div>
+      {showCelebration && (
+        <div className={styles.celebration}>{createSpaghettiElements()}</div>
+      )}
     </main>
   );
 }
