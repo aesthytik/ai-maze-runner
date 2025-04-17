@@ -112,8 +112,8 @@
 
 .player {
   position: absolute;
-  width: min(30px, 50%);
-  height: min(30px, 50%);
+  width: calc(var(--cell-size) * 0.6);
+  height: calc(var(--cell-size) * 0.6);
   border-radius: 50%;
   background: radial-gradient(
     circle at 30% 30%,

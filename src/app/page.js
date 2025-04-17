@@ -449,6 +449,7 @@ export default function Home() {
           style={{
             top: `${playerPos.row * cellSize + cellSize / 2}px`,
             left: `${playerPos.col * cellSize + cellSize / 2}px`,
+            "--cell-size": `${cellSize}px`,
           }}
         />
       </div>
